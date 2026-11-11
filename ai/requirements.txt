@@ -1,0 +1,54 @@
+# =====================================================================
+#  AI Call Monitoring - all phases (1, 2, 3, 4, 4b, 5, 6, 7)
+#  Python 3.12  |  NVIDIA GPU
+# =====================================================================
+ 
+--extra-index-url https://download.pytorch.org/whl/cu126
+ 
+# ---------------- core ----------------
+torch==2.8.0
+torchaudio==2.8.0
+torchvision==0.23.0
+torchcodec==0.7.*
+numpy
+scipy
+soundfile
+soxr
+pyyaml
+huggingface_hub>=1.5
+ 
+# ---------------- Phase 1 - audio preparation ----------------
+pyloudnorm
+# deepfilterlib has no Python 3.12 wheel (needs Rust to build); on 3.12 Phase 1 uses the spectral fallback
+deepfilternet==0.5.6; python_version < "3.12"
+ 
+# ---------------- Phase 2 - diarization ----------------
+pyannote.audio==4.0.7          # 4.0.6 is yanked: single-file __call__ returns an empty generator
+ 
+# ---------------- Phase 3 - speech to text ----------------
+faster-whisper>=1.2.0
+onnxruntime-gpu==1.20.2
+onnx==1.20.1
+ 
+# ---------------- Phase 4 - translation / Phase 4b - speaker roles ----------------
+transformers>=5.12,<6
+accelerate>=1.1.0
+bitsandbytes>=0.46
+sentencepiece
+safetensors
+ 
+# ---------------- Phase 5 + Phase 7 - text analysis ----------------
+# no pip package - uses Ollama (installed with the command below)
+ 
+# ---------------- Phase 6 - voice behaviour ----------------
+funasr
+modelscope
+silero-vad
+praat-parselmouth
+ 
+# ---------------- API (S3 + callback) ----------------
+fastapi
+uvicorn[standard]
+boto3
+httpx
+python-dotenv

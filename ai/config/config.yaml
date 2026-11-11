@@ -1,0 +1,211 @@
+paths:
+  input_dir: data/input
+  processed_dir: data/processed
+  results_dir: data/results
+  transcripts_dir: data/transcripts
+  log_dir: logs
+
+# -----------------------------------------------------------
+# Audio source - fetch the call recording from a URL (e.g. S3 presigned)
+# -----------------------------------------------------------
+source:
+  static_audio_url: ""           # keep empty here; set STATIC_AUDIO_URL in .env (presigned URLs carry credentials)
+  download_timeout_sec: 120
+  default_extension: ".m4a"      # used when the URL path has no known audio extension
+
+runtime:
+  device: auto                   # auto | cuda | cpu
+  keep_intermediate_files: true
+
+# -----------------------------------------------------------
+# Phase 1 - Audio preparation
+# -----------------------------------------------------------
+phase1:
+  target_sample_rate: 16000
+  target_channels: 1
+
+  validation:
+    allowed_extensions: [".wav", ".mp3", ".m4a", ".aac", ".ogg", ".opus", ".flac", ".amr", ".wma", ".webm", ".mp4"]
+    max_file_size_mb: 500
+    min_duration_sec: 2.0
+    max_duration_sec: 7200
+    silence_rms_threshold: 0.001
+
+  denoise:
+    enabled: true
+    method: deepfilternet        # deepfilternet | spectral | none
+    fallback_method: spectral    # used automatically if DeepFilterNet is not installed
+    deepfilter_sample_rate: 48000
+    chunk_seconds: 60
+    attenuation_limit_db: null
+
+  normalize:
+    enabled: true
+    method: loudness             # loudness | rms | peak
+    target_lufs: -20.0
+    target_rms_dbfs: -20.0
+    peak_ceiling_dbfs: -1.0
+
+  silence_trim:
+    enabled: true
+    threshold_db: -45.0
+    min_silence_sec: 0.3
+    keep_padding_sec: 0.2
+
+# -----------------------------------------------------------
+# Phase 2 - Speaker diarization (pyannote.audio 4.x)
+# -----------------------------------------------------------
+phase2:
+  model_name: pyannote/speaker-diarization-community-1
+  hf_token: ""                   # leave empty and set env HF_TOKEN
+  num_speakers: null             # set 2 for agent + customer
+  min_speakers: 1
+  max_speakers: 4
+
+  postprocess:
+    min_segment_sec: 0.3
+    merge_gap_sec: 0.5
+    relabel_by_first_appearance: true
+
+  export:
+    save_rttm: true
+    save_segment_clips: true
+    clip_padding_sec: 0.1
+
+# -----------------------------------------------------------
+# Phase 3 - Speech to text
+# -----------------------------------------------------------
+phase3:
+  language_detection:
+    model: small                 # faster-whisper size: tiny | base | small | medium
+    sample_seconds: 30           # how much speech is used to detect the language
+    language_map: {ur: hi}       # Whisper often labels Hindi calls as Urdu -> treat as Hindi
+    force_language: null         # e.g. "hi" to skip detection
+
+  routing:
+    parakeet_languages: [en]
+    indic_languages: [as, bn, brx, doi, gu, hi, kn, kok, ks, mai, ml, mni, mr, ne, or, pa, sa, sat, sd, ta, te, ur]
+
+  indic:
+    model_name: ai4bharat/indic-conformer-600m-multilingual
+    decoding: ctc                # ctc (faster) | rnnt (a bit more accurate)
+    workers: 1                   # keep 1 on a single GPU
+
+  parakeet:
+    model_name: nvidia/parakeet-tdt-0.6b-v2
+    python_executable: .venv_parakeet/bin/python   # separate Parakeet venv (relative to project root)
+    batch_size: 8
+    timeout_sec: 1800
+
+  min_segment_sec: 0.3           # shorter segments are skipped (status "skipped")
+
+# -----------------------------------------------------------
+# Phase 4 - Translation
+# -----------------------------------------------------------
+phase4:
+  model_name: bodhan-ai/indic-translate
+  load_in_4bit: true             # bitsandbytes 4-bit, saves GPU memory
+  target_language: English
+  skip_languages: [en]           # already English -> copy text, don't load model
+  num_beams: 3
+  max_new_tokens: 2048
+  max_chars: 1500                # longer text is split at sentence ends
+
+# -----------------------------------------------------------
+# Phase 4b - Speaker roles (AGENT / CUSTOMER)
+# -----------------------------------------------------------
+phase4b:
+  model_name: Qwen/Qwen3-1.7B
+  prefer_english: true           # use Phase 4 text_english if available
+  max_turns: 20                  # first N speaker turns sent to the model
+  max_chars: 3000
+  max_new_tokens: 160
+
+# -----------------------------------------------------------
+# Phase 5 - Text behaviour analysis (local Ollama)
+# -----------------------------------------------------------
+phase5:
+  text_field: text               # text = original language | text_english
+  speaker_role_map: {}           # e.g. {SPEAKER_1: agent, SPEAKER_2: customer} - overrides everything
+
+  ollama:                        # also used by Phase 7
+    url: http://localhost:11434/api/generate
+    model: gemma3:12b
+    seed: 0
+    num_ctx: 12288               # keep the same for every call (changing it reloads the model)
+    num_predict: 1500
+    fallback_num_ctx: 8192
+    fallback_num_predict: 1200
+    request_timeout: 1200
+    fallback_timeout: 600
+    prompt_warn_chars: 20000
+
+  role_num_predict: 1000
+  role_temperatures: [0.1]
+  summary_temperatures: [0.1]
+  behaviour_temperatures: [0.1]
+  max_items_per_list: 8
+  max_item_chars: 250
+
+# -----------------------------------------------------------
+# Phase 6 - Voice behaviour analysis (Emotion2Vec + pitch + energy + pauses)
+# -----------------------------------------------------------
+phase6:
+  emotion_model: iic/emotion2vec_plus_large
+  sample_rate: 16000
+  role_mapping_override: {}      # e.g. {SPEAKER_1: agent, SPEAKER_2: customer}
+
+  parallel:
+    segment_workers: 2           # units processed at the same time
+    pitch_workers: 2             # process pool for pitch/energy
+
+  min_unit_sec: 0.5              # shorter pieces are skipped
+  max_unit_sec: 4.0              # long turns are split so emotion changes inside a turn are seen
+  min_emotion_conf: 0.30         # below this the unit is "uncertain"
+  pitch_rise_ratio: 1.15         # vs the speaker's own baseline
+  energy_rise_ratio: 1.25
+  baseline_units: 3              # first N valid units of each speaker = baseline
+
+  vad:
+    min_pause_sec: 0.30
+    threshold: 0.5
+    min_speech_ms: 100
+    min_silence_ms: 100
+    speech_pad_ms: 30
+
+  report:
+    high_score: 0.60             # confidence bands
+    medium_score: 0.35
+    run_merge_gap_sec: 0.5       # join same-label units closer than this into one run
+
+# -----------------------------------------------------------
+# Phase 7 - Overall conversation analysis (text + voice) -> final report
+# -----------------------------------------------------------
+phase7:
+  text_field: text               # text = original language | text_english
+  speaker_role_map: {}           # overrides everything, e.g. {SPEAKER_1: agent, SPEAKER_2: customer}
+  ollama: null                   # null = use the phase5.ollama settings (same gemma3:12b server)
+
+  role_num_predict: 1000
+  role_temperatures: [0.1]
+  summary_temperatures: [0.1]
+  behaviour_temperatures: [0.1]
+  max_items_per_list: 8
+  max_item_chars: 250
+
+  segment_tone_roles: [agent]    # roles whose every line is tone-checked
+  segment_tone_batch_size: 8
+  segment_tone_temperatures: [0.1]
+  unclear_min_chars: 40          # "unclear" lines shorter than this are not flagged
+  human_review_min_severity: 1   # every negative behaviour is flagged; severity only orders them
+
+  fusion:
+    voice_flag_min_score: 0.35   # negative voice unit needs at least this score to be flagged
+    voice_negative_share_pct: 30 # role is negative-by-voice when angry+disgust+fear+sad >= this % of time
+    voice_severity_weights: {angry: 45, frustrated: 35, distressed: 25}
+
+# -----------------------------------------------------------
+# Pipeline
+# -----------------------------------------------------------
+pipeline:
+  run_phase5: false              # Phase 7 already contains the (newer) text analysis

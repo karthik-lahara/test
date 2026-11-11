@@ -1,0 +1,45 @@
+# Virtual environments
+venv/
+.venv/
+.venv_parakeet/
+env/
+AI_VOICE_ANALYSIS/venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Runtime output
+logs/*
+!logs/.gitkeep
+data/**/*
+!data/**/
+!data/**/.gitkeep
+
+# Model weights / large artifacts
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.safetensors
+*.nemo
+
+# Audio
+*.wav
+*.mp3
+*.flac
+*.m4a
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

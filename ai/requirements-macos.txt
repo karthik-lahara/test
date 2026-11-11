@@ -1,0 +1,67 @@
+# =====================================================================
+#  AI Call Monitoring - macOS / Apple Silicon (CPU) variant
+#  Python 3.12  |  no CUDA
+#
+#  Differences from requirements.txt (which targets NVIDIA CUDA 12.6):
+#    - dropped  --extra-index-url .../cu126   (CUDA-only wheel index)
+#    - onnxruntime-gpu==1.20.1  ->  onnxruntime>=1.23
+#         onnxruntime-gpu has NO macOS wheels at any version, and
+#         onnxruntime 1.20.1 has no arm64/cp312 wheel either.
+#         Used by silero-vad in Phase 6.
+#    - bitsandbytes kept so imports resolve, but its 4-bit path is
+#         CUDA-only, so Phase 4 (translation) cannot run here.
+#    - NeMo / Parakeet (Phase 3 English ASR) is NOT included; it needs a
+#         separate venv and is CUDA-oriented.
+# =====================================================================
+
+# ---------------- core ----------------
+torch==2.8.0
+torchaudio==2.8.0
+torchvision==0.23.0
+torchcodec==0.7.*
+numpy
+scipy
+soundfile
+soxr
+pyyaml
+huggingface_hub>=1.5
+
+# ---------------- Phase 1 - audio preparation ----------------
+pyloudnorm
+# deepfilterlib has no Python 3.12 wheel (needs Rust to build); on 3.12 Phase 1
+# uses the spectral fallback. Same marker developer's requirements.txt uses.
+deepfilternet==0.5.6; python_version < "3.12"
+
+# ---------------- Phase 2 - diarization ----------------
+pyannote.audio==4.0.7          # 4.0.6 is yanked: single-file __call__ returns an empty generator
+
+# ---------------- Phase 3 - speech to text (language ID only on mac) ----------------
+faster-whisper>=1.2.0
+onnxruntime>=1.23
+onnx>=1.17
+
+# ---------------- Phase 4 - translation / Phase 4b - speaker roles ----------------
+transformers>=5.12,<6
+accelerate>=1.1.0
+bitsandbytes>=0.46
+sentencepiece
+safetensors
+
+# ---------------- Phase 5 + Phase 7 - text analysis ----------------
+# no pip package - uses Ollama (brew install ollama; ollama pull gemma3:12b)
+
+# ---------------- Phase 6 - voice behaviour ----------------
+funasr
+modelscope
+silero-vad
+# Pinned: unpinned, pip backtracked to an sdist whose scikit-build build dep
+# calls configparser.SafeConfigParser(), removed in 3.12. 0.4.7 ships a
+# cp312 macosx_11_0_arm64 wheel.
+praat-parselmouth==0.4.7
+
+# ---------------- API (S3 + callback) ----------------
+fastapi
+uvicorn[standard]
+boto3
+httpx
+python-dotenv
