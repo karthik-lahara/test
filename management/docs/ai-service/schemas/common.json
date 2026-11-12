@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lahara.local/ai-service/common.json",
+  "title": "Shared definitions for the AI service contract",
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-f0-9]{24}$" },
+    "itemKey": { "type": "string", "pattern": "^[A-Z][A-Z0-9]{1,5}-[0-9]+$" },
+    "projectKey": { "type": "string", "pattern": "^[A-Z][A-Z0-9]{1,5}$" },
+    "date": { "type": "string", "format": "date" },
+    "timeZone": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "workItemType": { "enum": ["epic", "feature", "story", "task", "bug", "subtask"] },
+    "workItemStatus": { "enum": ["todo", "in_progress", "blocked", "qa", "done"] },
+    "priority": { "enum": ["urgent", "high", "medium", "low", "no_priority"] },
+    "projectStatus": { "enum": ["planning", "active", "on_hold", "completed"] },
+    "orgRole": { "enum": ["organization_admin", "member"] },
+    "source": { "enum": ["text", "voice"] },
+    "me": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "fullName"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "fullName": { "type": "string", "maxLength": 100 },
+        "role": { "$ref": "#/$defs/orgRole" }
+      }
+    },
+    "projectRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "key", "name"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "key": { "$ref": "#/$defs/projectKey" },
+        "name": { "type": "string", "maxLength": 100 }
+      }
+    },
+    "itemSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "key", "type", "title", "status", "priority", "dueDate", "projectKey"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "key": { "$ref": "#/$defs/itemKey" },
+        "type": { "$ref": "#/$defs/workItemType" },
+        "title": { "type": "string", "maxLength": 200 },
+        "status": { "$ref": "#/$defs/workItemStatus" },
+        "priority": { "$ref": "#/$defs/priority" },
+        "dueDate": { "oneOf": [{ "$ref": "#/$defs/date" }, { "type": "null" }] },
+        "projectKey": { "$ref": "#/$defs/projectKey" },
+        "completedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "usage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["model", "inputTokens", "outputTokens", "latencyMs"],
+      "properties": {
+        "model": { "type": "string" },
+        "inputTokens": { "type": "integer", "minimum": 0 },
+        "outputTokens": { "type": "integer", "minimum": 0 },
+        "latencyMs": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

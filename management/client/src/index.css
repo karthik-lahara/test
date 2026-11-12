@@ -1,0 +1,345 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens. Neutral greys, flat surfaces, colour only for status.
+ * index.html sets data-theme="dark" by default; light only when chosen.
+ */
+:root {
+  --canvas: #f7f7f7;
+  --panel: #ffffff;
+  --raised: #f7f7f7;
+  --hover: #f0f0f0;
+  --active: #e8e8e8;
+  --line: #e7e7e7;
+  --line-strong: #d6d6d6;
+  --fg: #0a0a0a;
+  --fg-muted: #4f4f4f;
+  --fg-subtle: #737373;
+  --accent: #4f46e5;
+  --accent-hover: #4338ca;
+  --accent-soft: rgb(79 70 229 / 0.08);
+  --accent-fg: #ffffff;
+  --primary: #171717;
+  --primary-hover: #2b2b2b;
+  --primary-fg: #ffffff;
+  --coral: #dc2626;
+  --overlay: rgb(0 0 0 / 0.35);
+  --shadow: 0 16px 40px -12px rgb(0 0 0 / 0.18), 0 0 0 1px rgb(0 0 0 / 0.06);
+  --shadow-card: none;
+  /* Focus glow for text fields: one quiet brand-gold edge and halo. */
+  --glow-edge: rgb(214 150 30 / 0.5);
+  --glow-rest: rgb(214 150 30 / 0.28);
+  --glow:
+    -12px 2px 26px -6px rgb(234 160 40 / 0.34), 12px 2px 26px -6px rgb(120 110 240 / 0.3),
+    0 0 12px rgb(234 160 40 / 0.12);
+  --glow-soft: -6px 0 18px -6px rgb(234 160 40 / 0.2), 6px 0 18px -6px rgb(120 110 240 / 0.16);
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  /* Neutral dark: no blue tint, soft off-white text, translucent borders. */
+  --canvas: #161616;
+  --panel: #161616;
+  --raised: #1d1d1d;
+  --hover: #232323;
+  --active: #2b2b2b;
+  --line: rgb(255 255 255 / 0.08);
+  --line-strong: rgb(255 255 255 / 0.14);
+  --fg: #ededed;
+  --fg-muted: #a3a3a3;
+  --fg-subtle: #7c7c7c;
+  --accent: #8b8ff8;
+  --accent-hover: #a0a4fa;
+  --accent-soft: rgb(139 143 248 / 0.12);
+  --accent-fg: #ffffff;
+  --primary: #ededed;
+  --primary-hover: #ffffff;
+  --primary-fg: #111111;
+  --coral: #f87171;
+  --overlay: rgb(0 0 0 / 0.6);
+  --shadow: 0 16px 40px -12px rgb(0 0 0 / 0.6), 0 0 0 1px rgb(255 255 255 / 0.08);
+  --shadow-card: none;
+  --glow-edge: rgb(246 183 60 / 0.45);
+  --glow-rest: rgb(246 183 60 / 0.24);
+  --glow:
+    -14px 2px 30px -6px rgb(246 183 60 / 0.38), 14px 2px 30px -6px rgb(139 143 248 / 0.4),
+    0 0 14px rgb(242 115 139 / 0.12);
+  --glow-soft: -8px 0 20px -8px rgb(246 183 60 / 0.22), 8px 0 20px -8px rgb(139 143 248 / 0.18);
+  color-scheme: dark;
+}
+
+@theme inline {
+  --font-sans: "Manrope", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  --color-canvas: var(--canvas);
+  --color-panel: var(--panel);
+  --color-raised: var(--raised);
+  --color-hover: var(--hover);
+  --color-active: var(--active);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-subtle: var(--fg-subtle);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-fg: var(--accent-fg);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-fg: var(--primary-fg);
+  --color-coral: var(--coral);
+  --color-overlay: var(--overlay);
+  --shadow-pop: var(--shadow);
+  --shadow-card: var(--shadow-card);
+
+  --spacing-header: 3.5rem;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--canvas);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+
+::selection {
+  background: rgb(139 143 248 / 0.3);
+}
+
+/* Text fields show focus with a quiet border change only (set per control), no ring. */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[contenteditable="true"]:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+/* Focus ring: foreground edge with a soft halo, no brand colour. */
+:focus-visible {
+  outline: 1px solid var(--fg-muted);
+  outline-offset: 0;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--fg) 20%, transparent);
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+/* Section label: small uppercase, wide tracking (sidebar groups, page sections). */
+.section-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-subtle);
+}
+
+/* Legacy effect classes kept as quiet no-ops so the UI stays flat. */
+.text-gradient {
+  color: var(--fg);
+}
+.aurora,
+.dot-grid,
+.top-sheen {
+  background: none;
+}
+.glow-border {
+  position: relative;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.btn-glow {
+  background: var(--primary);
+  color: var(--primary-fg) !important;
+}
+.btn-glow:hover {
+  background: var(--primary-hover);
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgb(255 92 122 / 0.5);
+  }
+  100% {
+    box-shadow: 0 0 0 16px rgb(255 92 122 / 0);
+  }
+}
+
+@keyframes shimmer {
+  to {
+    background-position: 200% center;
+  }
+}
+
+.animate-pop {
+  animation: pop-in 160ms ease-out;
+}
+
+.animate-record {
+  animation: pulse-ring 1.2s ease-out infinite;
+}
+
+.animate-shimmer {
+  background-size: 200% auto;
+  animation: shimmer 4s linear infinite;
+}
+
+/* Text fields: a soft light around the box while typing (warm gold on the left, soft
+   violet on the right), blurred so it reads as a glow, not an outline. */
+.field-glow {
+  transition:
+    border-color 180ms ease,
+    box-shadow 220ms ease;
+}
+.field-glow:focus,
+.field-glow:focus-within {
+  border-color: var(--glow-edge);
+  box-shadow: var(--glow);
+}
+
+/* AI entry points (the dashboard AI bar, the assistant box): a faint warm edge at rest so
+   they read as the AI places, and the same glow on hover and while typing. */
+.ai-surface {
+  box-shadow: inset 0 0 0 1px var(--glow-rest);
+  transition: box-shadow 220ms ease;
+}
+.ai-surface:hover {
+  box-shadow:
+    inset 0 0 0 1px var(--glow-rest),
+    var(--glow-soft);
+}
+.ai-surface:focus-within {
+  box-shadow:
+    inset 0 0 0 1px var(--glow-edge),
+    var(--glow);
+}
+
+/* ---------- Empty-state illustration: stacked task cards, gently alive ---------- */
+@keyframes illo-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+@keyframes illo-sway-back {
+  0%,
+  100% {
+    transform: rotate(-8deg);
+  }
+  50% {
+    transform: rotate(-5deg) translateY(1px);
+  }
+}
+@keyframes illo-sway-mid {
+  0%,
+  100% {
+    transform: rotate(7deg);
+  }
+  50% {
+    transform: rotate(4deg) translateY(-1px);
+  }
+}
+@keyframes illo-line {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scaleX(0.6);
+  }
+  50% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+.empty-card-front {
+  animation: illo-float 3.2s ease-in-out infinite;
+}
+.empty-card-back {
+  opacity: 0.6;
+  animation: illo-sway-back 4.4s ease-in-out infinite;
+}
+.empty-card-mid {
+  opacity: 0.8;
+  animation: illo-sway-mid 4s ease-in-out infinite;
+}
+.empty-line {
+  transform-origin: left;
+  animation: illo-line 2.4s ease-in-out infinite;
+}
+
+/* ---------- AI agent face ---------- */
+.agent-eyes rect {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 110ms ease-in-out;
+}
+.agent-eyes.agent-blink rect {
+  transform: scaleY(0.12);
+}
+.agent-eyes.agent-calm rect {
+  transform: scaleY(0.36);
+  transition-duration: 320ms;
+}
+@keyframes agent-halo {
+  0% {
+    box-shadow: 0 0 0 0 rgb(246 183 60 / 0.4);
+  }
+  100% {
+    box-shadow: 0 0 0 9px rgb(246 183 60 / 0);
+  }
+}
+.agent-halo {
+  animation: agent-halo 1.6s ease-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Scrolls sideways when it doesn't fit (tabs on small screens), without showing a scrollbar. */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

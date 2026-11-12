@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lahara.local/ai-service/chat.request.json",
+  "title": "POST /v1/chat request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["messages", "today", "timeZone", "me", "organization", "context"],
+  "properties": {
+    "messages": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["role", "content"],
+        "properties": {
+          "role": { "enum": ["user", "assistant"] },
+          "content": { "type": "string", "minLength": 1, "maxLength": 2000 }
+        }
+      }
+    },
+    "today": { "$ref": "common.json#/$defs/date" },
+    "timeZone": { "$ref": "common.json#/$defs/timeZone" },
+    "me": { "$ref": "common.json#/$defs/me" },
+    "organization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": { "name": { "type": "string", "maxLength": 100 } }
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["projects", "myOpenItems", "overdue", "blocked", "recentlyDone", "workload", "hierarchy"],
+      "properties": {
+        "projects": {
+          "type": "array",
+          "maxItems": 50,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "key", "name", "status", "targetDate", "counts"],
+            "properties": {
+              "id": { "$ref": "common.json#/$defs/id" },
+              "key": { "$ref": "common.json#/$defs/projectKey" },
+              "name": { "type": "string", "maxLength": 100 },
+              "status": { "$ref": "common.json#/$defs/projectStatus" },
+              "targetDate": { "oneOf": [{ "$ref": "common.json#/$defs/date" }, { "type": "null" }] },
+              "counts": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["total", "done", "inProgress", "blocked", "overdue"],
+                "properties": {
+                  "total": { "type": "integer", "minimum": 0 },
+                  "done": { "type": "integer", "minimum": 0 },
+                  "inProgress": { "type": "integer", "minimum": 0 },
+                  "blocked": { "type": "integer", "minimum": 0 },
+                  "overdue": { "type": "integer", "minimum": 0 }
+                }
+              }
+            }
+          }
+        },
+        "myOpenItems": { "type": "array", "maxItems": 100, "items": { "$ref": "common.json#/$defs/itemSummary" } },
+        "overdue": { "type": "array", "maxItems": 50, "items": { "$ref": "common.json#/$defs/itemSummary" } },
+        "blocked": { "type": "array", "maxItems": 50, "items": { "$ref": "common.json#/$defs/itemSummary" } },
+        "recentlyDone": { "type": "array", "maxItems": 50, "items": { "$ref": "common.json#/$defs/itemSummary" } },
+        "workload": {
+          "type": "array",
+          "maxItems": 200,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["userId", "fullName", "open", "hours"],
+            "properties": {
+              "userId": { "$ref": "common.json#/$defs/id" },
+              "fullName": { "type": "string", "maxLength": 100 },
+              "open": { "type": "integer", "minimum": 0 },
+              "hours": { "type": "number", "minimum": 0 }
+            }
+          }
+        },
+        "hierarchy": {
+          "type": "array",
+          "maxItems": 300,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "key", "type", "title", "projectKey", "childCount"],
+            "properties": {
+              "id": { "$ref": "common.json#/$defs/id" },
+              "key": { "$ref": "common.json#/$defs/itemKey" },
+              "type": { "enum": ["epic", "feature", "story"] },
+              "title": { "type": "string", "maxLength": 200 },
+              "projectKey": { "$ref": "common.json#/$defs/projectKey" },
+              "childCount": { "type": "integer", "minimum": 0 }
+            }
+          }
+        }
+      }
+    }
+  }
+}

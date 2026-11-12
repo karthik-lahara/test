@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lahara.local/ai-service/breakdown.request.json",
+  "title": "POST /v1/breakdown request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["item", "childType", "existingChildren", "projectName", "hint"],
+  "properties": {
+    "item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "type", "title", "description", "acceptanceCriteria"],
+      "properties": {
+        "key": { "$ref": "common.json#/$defs/itemKey" },
+        "type": { "enum": ["epic", "feature", "story", "task", "bug"] },
+        "title": { "type": "string", "maxLength": 200 },
+        "description": { "type": "string", "maxLength": 20000 },
+        "acceptanceCriteria": {
+          "type": "array",
+          "maxItems": 50,
+          "items": { "type": "string", "maxLength": 300 }
+        }
+      }
+    },
+    "childType": { "enum": ["feature", "story", "task", "subtask"] },
+    "existingChildren": {
+      "type": "array",
+      "maxItems": 100,
+      "items": { "type": "string", "maxLength": 200 }
+    },
+    "projectName": { "type": "string", "maxLength": 100 },
+    "hint": { "oneOf": [{ "type": "string", "maxLength": 500 }, { "type": "null" }] }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lahara.local/ai-service/error.json",
+  "title": "AI service error body (any non-200 status)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["error"],
+  "properties": {
+    "error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "message"],
+      "properties": {
+        "code": {
+          "enum": ["invalid_request", "unauthorized", "not_understood", "rate_limited", "model_unavailable", "timeout"]
+        },
+        "message": { "type": "string", "maxLength": 500 }
+      }
+    }
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lahara.local/ai-service/parse-command.request.json",
+  "title": "POST /v1/parse-command request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["text", "source", "today", "timeZone", "me", "context"],
+  "properties": {
+    "text": { "type": "string", "minLength": 3, "maxLength": 2000 },
+    "source": { "$ref": "common.json#/$defs/source" },
+    "today": { "$ref": "common.json#/$defs/date" },
+    "timeZone": { "$ref": "common.json#/$defs/timeZone" },
+    "me": { "$ref": "common.json#/$defs/me" },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["currentProject", "currentParent", "projects", "members", "candidateParents"],
+      "properties": {
+        "currentProject": {
+          "oneOf": [{ "$ref": "common.json#/$defs/projectRef" }, { "type": "null" }]
+        },
+        "currentParent": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["id", "key", "type", "title"],
+              "properties": {
+                "id": { "$ref": "common.json#/$defs/id" },
+                "key": { "$ref": "common.json#/$defs/itemKey" },
+                "type": { "$ref": "common.json#/$defs/workItemType" },
+                "title": { "type": "string", "maxLength": 200 }
+              }
+            },
+            { "type": "null" }
+          ]
+        },
+        "projects": {
+          "type": "array",
+          "maxItems": 50,
+          "items": { "$ref": "common.json#/$defs/projectRef" }
+        },
+        "members": {
+          "type": "array",
+          "maxItems": 200,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "fullName"],
+            "properties": {
+              "id": { "$ref": "common.json#/$defs/id" },
+              "fullName": { "type": "string", "maxLength": 100 },
+              "designation": { "type": "string", "maxLength": 60 }
+            }
+          }
+        },
+        "candidateParents": {
+          "type": "array",
+          "maxItems": 300,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "key", "type", "title", "projectId"],
+            "properties": {
+              "id": { "$ref": "common.json#/$defs/id" },
+              "key": { "$ref": "common.json#/$defs/itemKey" },
+              "type": { "enum": ["epic", "feature", "story", "task", "bug"] },
+              "title": { "type": "string", "maxLength": 200 },
+              "projectId": { "$ref": "common.json#/$defs/id" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lahara.local/ai-service/parse-command.response.json",
+  "title": "POST /v1/parse-command response (200)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["data", "usage"],
+  "properties": {
+    "usage": { "$ref": "common.json#/$defs/usage" },
+    "data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type", "title", "description", "priority", "projectId", "parentId", "assigneeIds",
+        "labels", "dueDate", "estimateHours", "acceptanceCriteria", "detected", "questions",
+        "warnings", "confidence"
+      ],
+      "properties": {
+        "type": { "$ref": "common.json#/$defs/workItemType" },
+        "title": { "type": "string", "maxLength": 200 },
+        "description": { "type": "string", "maxLength": 20000 },
+        "priority": { "$ref": "common.json#/$defs/priority" },
+        "projectId": { "oneOf": [{ "$ref": "common.json#/$defs/id" }, { "type": "null" }] },
+        "parentId": { "oneOf": [{ "$ref": "common.json#/$defs/id" }, { "type": "null" }] },
+        "assigneeIds": {
+          "type": "array",
+          "maxItems": 10,
+          "uniqueItems": true,
+          "items": { "$ref": "common.json#/$defs/id" }
+        },
+        "labels": {
+          "type": "array",
+          "maxItems": 20,
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9 _-]{0,29}$" }
+        },
+        "dueDate": { "oneOf": [{ "$ref": "common.json#/$defs/date" }, { "type": "null" }] },
+        "estimateHours": {
+          "oneOf": [{ "type": "number", "minimum": 0, "maximum": 1000 }, { "type": "null" }]
+        },
+        "acceptanceCriteria": {
+          "type": "array",
+          "maxItems": 10,
+          "items": { "type": "string", "minLength": 1, "maxLength": 300 }
+        },
+        "detected": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["field", "label"],
+            "properties": {
+              "field": {
+                "enum": [
+                  "type", "title", "priority", "projectId", "parentId", "assigneeIds", "labels",
+                  "dueDate", "estimateHours", "acceptanceCriteria"
+                ]
+              },
+              "label": { "type": "string", "maxLength": 80 }
+            }
+          }
+        },
+        "questions": { "type": "array", "maxItems": 5, "items": { "type": "string", "maxLength": 200 } },
+        "warnings": { "type": "array", "maxItems": 5, "items": { "type": "string", "maxLength": 200 } },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    }
+  }
+}

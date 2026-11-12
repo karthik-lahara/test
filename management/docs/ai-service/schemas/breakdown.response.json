@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lahara.local/ai-service/breakdown.response.json",
+  "title": "POST /v1/breakdown response (200)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["data", "usage"],
+  "properties": {
+    "usage": { "$ref": "common.json#/$defs/usage" },
+    "data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["titles"],
+      "properties": {
+        "titles": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 8,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 120 }
+        }
+      }
+    }
+  }
+}

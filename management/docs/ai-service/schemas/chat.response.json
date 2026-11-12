@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lahara.local/ai-service/chat.response.json",
+  "title": "POST /v1/chat response (200)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["data", "usage"],
+  "properties": {
+    "usage": { "$ref": "common.json#/$defs/usage" },
+    "data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text", "itemKeys", "suggestions", "createDraft", "breakdown"],
+      "properties": {
+        "text": { "type": "string", "minLength": 1, "maxLength": 1500 },
+        "itemKeys": {
+          "type": "array",
+          "maxItems": 6,
+          "uniqueItems": true,
+          "items": { "$ref": "common.json#/$defs/itemKey" }
+        },
+        "suggestions": {
+          "type": "array",
+          "maxItems": 4,
+          "items": { "type": "string", "minLength": 1, "maxLength": 60 }
+        },
+        "createDraft": {
+          "oneOf": [{ "type": "string", "minLength": 3, "maxLength": 2000 }, { "type": "null" }]
+        },
+        "breakdown": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["parentKey", "childType", "titles"],
+              "properties": {
+                "parentKey": { "$ref": "common.json#/$defs/itemKey" },
+                "childType": { "enum": ["feature", "story", "task", "subtask"] },
+                "titles": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 8,
+                  "items": { "type": "string", "minLength": 1, "maxLength": 120 }
+                }
+              }
+            },
+            { "type": "null" }
+          ]
+        }
+      }
+    }
+  }
+}
